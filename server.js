@@ -1,42 +1,35 @@
-const session = require('express-session');
+const express = require('express');
 const cookieParser = require('cookie-parser');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const { User } = require('./models');
+const session = require('express-session');
+const path = require('path');
+require('dotenv').config();
 
+const app = express(); // Initialize the Express application
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your_secret_key',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+  secret: process.env.SESSION_SECRET || 'default_secret',
+  resave: false,
+  saveUninitialized: true
 }));
 
-passport.use(new LocalStrategy(async (username, password, done) => {
-    try {
-        const user = await User.findOne({ where: { username } });
-        if (user && await user.validPassword(password)) {
-            return done(null, user);
-        } else {
-            return done(null, false, { message: 'Invalid credentials' });
-        }
-    } catch (err) {
-        return done(err);
-    }
-}));
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
-passport.serializeUser((user, done) => {
-    done(null, user.id);
+// Define your routes here
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
 
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findByPk(id);
-        done(null, user);
-    } catch (err) {
-        done(err);
-    }
+// Error handling middleware (optional)
+app.use((req, res, next) => {
+  res.status(404).send('404 Not Found');
 });
 
-app.use(passport.initialize());
-app.use(passport.session());
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
