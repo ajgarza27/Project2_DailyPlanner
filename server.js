@@ -1,26 +1,26 @@
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
+const { engine } = require('express-handlebars');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: true }));
+// Setup Handlebars
+app.engine('handlebars', engine());
+app.set('view engine', 'handlebars');
+app.set('views', path.join(__dirname, 'views'));
 
-// Serve static files
+// Middleware setup
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cookieParser());
+app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: true }));
 
-// Serve the main HTML file
+// Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'index.html'));
+    res.render('main', { title: 'Daily Planner' });
 });
 
-// Start server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(process.env.PORT || 3000, () => {
+    console.log('Server is running on port 3000');
 });
